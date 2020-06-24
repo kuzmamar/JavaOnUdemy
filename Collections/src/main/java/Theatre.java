@@ -1,11 +1,10 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Theatre {
     private final String theatreName;
     private List<Seat> seats = new ArrayList<>();
 
-    public Theatre(final String theatreName, int numRows, int seatsPerRow) {
+    public Theatre(String theatreName, int numRows, int seatsPerRow) {
         this.theatreName = theatreName;
         initSeats(numRows, seatsPerRow);
     }
@@ -15,20 +14,12 @@ public class Theatre {
     }
 
     public boolean reserveSeat(String seatNumber) {
-        Seat requestedSeat = null;
-
-        for(Seat seat : seats) {
-            if (seat.getNumber().equals(seatNumber)) {
-                requestedSeat = seat;
-                break;
-            }
-        }
+        Seat requestedSeat = findSeat(seatNumber);
 
         if (requestedSeat == null) {
-            System.out.println("There is no seat " + seatNumber);
+            System.out.println("[RESERVE SEAT] There is not seat " + seatNumber);
             return false;
         }
-
         return requestedSeat.reserve();
     }
 
@@ -39,11 +30,12 @@ public class Theatre {
         }
     }
 
-    private class Seat {
+    private class Seat implements Comparable<Seat> {
         private final String number;
         private boolean reserved = false;
 
-        public Seat(final String number) {
+        public Seat(String number) {
+            Objects.requireNonNull(number);
             this.number = number;
         }
 
@@ -71,6 +63,11 @@ public class Theatre {
             System.out.println("[CANCEL] Seat reservation cancelled");
             return false;
         }
+
+        @Override
+        public int compareTo(Seat seat) {
+            return this.number.compareToIgnoreCase(seat.number);
+        }
     }
 
     private void initSeats(int numRows, int seatsPerRow) {
@@ -82,5 +79,16 @@ public class Theatre {
                 seats.add(seat);
             }
         }
+    }
+
+    private Seat findSeat(String seatNumber) {
+        Seat seatToFind = new Seat(seatNumber);
+        int seatToFindPos = Collections.binarySearch(seats, seatToFind);
+
+        if (seatToFindPos < 0) {
+            return null;
+        }
+
+        return seats.get(seatToFindPos);
     }
 }
