@@ -4,6 +4,20 @@ public class Theatre {
     private final String theatreName;
     private List<Seat> seats = new ArrayList<>();
 
+    static final Comparator<Seat> SEAT_PRICE_ORDER = new Comparator<Seat>() {
+
+        @Override
+        public int compare(Seat a, Seat b) {
+            if (a.getPrice() < b.getPrice()) {
+                return -1;
+            }
+            if (a.getPrice() > b.getPrice()) {
+                return 1;
+            }
+            return 0;
+        }
+    };
+
     public Theatre(String theatreName, int numRows, int seatsPerRow) {
         this.theatreName = theatreName;
         initSeats(numRows, seatsPerRow);
@@ -30,17 +44,23 @@ public class Theatre {
         }
     }
 
-    private class Seat implements Comparable<Seat> {
+    public class Seat implements Comparable<Seat> {
         private final String number;
+        private final double price;
         private boolean reserved = false;
 
-        public Seat(String number) {
+        public Seat(String number, double price) {
             Objects.requireNonNull(number);
             this.number = number;
+            this.price = price;
         }
 
         public String getNumber() {
             return number;
+        }
+
+        public double getPrice() {
+            return price;
         }
 
         public boolean reserve() {
@@ -68,6 +88,15 @@ public class Theatre {
         public int compareTo(Seat seat) {
             return this.number.compareToIgnoreCase(seat.number);
         }
+
+        @Override
+        public String toString() {
+            return "{" + "number: " + this.number + ", price: " + this.price + "}";
+        }
+    }
+
+    public Collection<Seat> getSeats() {
+        return seats;
     }
 
     private void initSeats(int numRows, int seatsPerRow) {
@@ -75,14 +104,16 @@ public class Theatre {
 
         for (char row = 'A'; row <= lastRow; row++) {
             for (int seatNum = 1; seatNum <= seatsPerRow; seatNum++) {
-                Seat seat = new Seat(row + String.format("%02d", seatNum));
+                double seatPrice = determineSeatPrice(row, seatNum);
+                String seatNumber = row + String.format("%02d", seatNum);
+                Seat seat = new Seat(seatNumber, seatPrice);
                 seats.add(seat);
             }
         }
     }
 
     private Seat findSeat(String seatNumber) {
-        Seat seatToFind = new Seat(seatNumber);
+        Seat seatToFind = new Seat(seatNumber, 0);
         int seatToFindPos = Collections.binarySearch(seats, seatToFind);
 
         if (seatToFindPos < 0) {
@@ -90,5 +121,17 @@ public class Theatre {
         }
 
         return seats.get(seatToFindPos);
+    }
+
+    private static double determineSeatPrice(int row, int seatNum) {
+        double price = 12.00;
+
+        if ((row < 'D') && (seatNum >= 4 && seatNum <= 9)) {
+            price = 14.00;
+        } else if ((row > 'F') || (seatNum < 4 || seatNum > 9)) {
+            price = 7.00;
+        }
+
+        return price;
     }
 }
